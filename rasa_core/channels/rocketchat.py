@@ -4,17 +4,17 @@ from __future__ import unicode_literals
 
 import logging
 import threading
+import queue
 
 from flask import Blueprint, request, jsonify, make_response
 from rocketchat_py_sdk import driver
 
-from rasa_core.channels.channel import UserMessage, OutputChannel
+from rasa_core.channels.channel import InputChannel, UserMessage, OutputChannel
 from rasa_core.channels.rest import HttpInputComponent
 
 logger = logging.getLogger(__name__)
 
-
-class RocketChatInput(HttpInputComponent):
+class RocketChatInput(InputChannel):
 
     """RocketChat input channel implementation."""
 
@@ -30,52 +30,27 @@ class RocketChatInput(HttpInputComponent):
                                             server=self.server_url,
                                             ssl=self.ssl)
         self.rocketchat_bot.start()
+        self.rocketchat_bot.connector.add_prefix_handler('', self.register_message)
 
-    def send_message(self, text, sender_name, recipient_id, on_new_message):
-        try:
-            if sender_name != self.user:
-                out_channel = self.rocketchat_bot
-                user_msg = UserMessage(text, out_channel, recipient_id)
-                on_new_message(user_msg)
+        self.message_queue = queue.Queue()
 
-        except Exception as e:
-            logger.error("Exception when trying to handle "
-                         "message.{0}".format(e))
-            logger.error(e, exc_info=True)
-            pass
+    def start_async_listening(self, message_queue):
+        self._record_messages(message_queue.enqueue)
 
-    def blueprint(self, on_new_message):
-        rocketchat_webhook = Blueprint('rocketchat_webhook', __name__)
+    def start_sync_listening(self, message_handler):
+        self._record_messages(message_handler)
 
-        @rocketchat_webhook.route("/", methods=['GET'])
-        def health():
-            return jsonify({"status": "ok"})
+    def _record_messages(self, on_message):
+        while self.rocketchat_bot.connector.connect:
+            if not self.message_queue.empty():
+                msg = self.message_queue.get()
 
-        @rocketchat_webhook.route("/webhook", methods=['GET', 'POST'])
-        def webhook():
-            request.get_data()
-            if request.json:
-                output = request.json
-                logger.debug(output)
+                on_message(
+                    UserMessage(msg['msg'], self.rocketchat_bot, msg['rid'])
+                )
 
-                if "visitor" not in output:
-                    sender_id = output.get("user_id", None)
-                    sender_name = output.get("user_name", None)
-                    text = output.get("text", None)
-                    recipient_id = output.get("channel_id", None)
-                else:
-                    sender_id = output.get("visitor", None).get("_id", None)
-                    messages_list = output.get("messages", None)
-                    text = messages_list[0].get("msg", None)
-                    sender_name = messages_list[0].get("username", None)
-                    recipient_id = output.get("_id")
-
-                self.send_message(text, sender_name, recipient_id,
-                                  on_new_message)
-
-            return make_response()
-
-        return rocketchat_webhook
+    def register_message(self, bot, message):
+        self.message_queue.put(message)
 
 
 class RocketChatBot(OutputChannel):
