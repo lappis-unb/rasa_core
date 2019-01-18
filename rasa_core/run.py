@@ -10,7 +10,7 @@ import rasa_core
 from rasa_core import constants, agent
 from rasa_core import utils, server
 from rasa_core.agent import Agent
-from rasa_core.broker import PikaProducer
+from rasa_core.event_brokers import BUILTIN_EVENT_BROKERS
 from rasa_core.channels import (
     console, InputChannel,
     BUILTIN_CHANNELS)
@@ -73,6 +73,10 @@ def create_argument_parser():
         '--enable_api',
         action="store_true",
         help="Start the web server api in addition to the input channel")
+    parser.add_argument(
+        '--event_broker',
+        default=None,
+        help="Broker producer to be used")
 
     jwt_auth = parser.add_argument_group('JWT Authentication')
     jwt_auth.add_argument(
@@ -126,6 +130,14 @@ def _create_single_channel(channel, credentials):
                 "make sure the mentioned channel is not misspelled. "
                 "If you are creating your own channel, make sure it "
                 "is a proper name of a class in a module.".format(channel))
+
+
+def create_event_broker(event_broker, event_broker_config):
+    if event_broker in BUILTIN_EVENT_BROKERS:
+        return BUILTIN_EVENT_BROKERS[event_broker].from_endpoint_config(event_broker_config)
+    else:
+        raise Exception(
+            "Failed to create event broker producer for '{}'.".format(event_broker))
 
 
 def start_cmdline_io(server_url, on_finish, **kwargs):
@@ -230,7 +242,6 @@ if __name__ == '__main__':
     logging.getLogger('engineio').setLevel(logging.WARN)
     logging.getLogger('matplotlib').setLevel(logging.WARN)
     logging.getLogger('socketio').setLevel(logging.ERROR)
-    logging.getLogger('pika').setLevel(logging.ERROR)
 
     utils.configure_colored_logging(cmdline_args.loglevel)
     utils.configure_file_logging(cmdline_args.loglevel,
@@ -241,7 +252,7 @@ if __name__ == '__main__':
     _endpoints = AvailableEndpoints.read_endpoints(cmdline_args.endpoints)
     _interpreter = NaturalLanguageInterpreter.create(cmdline_args.nlu,
                                                      _endpoints.nlu)
-    _broker = PikaProducer.from_endpoint_config(_endpoints.event_broker)
+    _broker = create_event_broker(cmdline_args.event_broker, _endpoints.event_broker)
 
     _tracker_store = TrackerStore.find_tracker_store(
         None, _endpoints.tracker_store, _broker)
