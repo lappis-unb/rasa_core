@@ -157,6 +157,11 @@ def add_general_args(parser):
         help="If enabled, will create plots showing checkpoints "
              "and their connections between story blocks in a  "
              "file called `story_blocks_connections.html`.")
+    parser.add_argument(
+        '--intents',
+        type=str,
+        help="Adds intents files path and enables validator"
+    )
 
     utils.add_logging_option_arguments(parser)
 
@@ -334,7 +339,7 @@ def do_interactive_learning(cmdline_args, stories, additional_arguments):
         finetune=cmdline_args.finetune,
         skip_visualization=cmdline_args.skip_visualization)
 
-def validate_files(domain, stories, intents="data/nlu.md"):
+def validate_files(domain, stories, intents):
     validator = Validator(domain=domain,
                           intents=intents,
                           stories=stories)
@@ -353,7 +358,10 @@ if __name__ == '__main__':
 
     training_stories = cli.stories_from_cli_args(cmdline_arguments)
 
-    validate_files(cmdline_arguments.domain,training_stories)
+    if cmdline_arguments.intents != None:
+        validate_files(cmdline_arguments.domain,
+                        cmdline_arguments.stories,
+                        cmdline_arguments.intents)
 
     if cmdline_arguments.mode == 'default':
         do_default_training(cmdline_arguments,
