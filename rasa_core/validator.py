@@ -3,7 +3,7 @@ import os
 from jsonschema import validate
 import yaml
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, exists
 from rasa_core import utils
 import traceback
 import argparse
@@ -65,13 +65,13 @@ class Validator:
     def __init__(self, domain = "domain.yml", intents="data/nlu.md", stories="data/stories.md"):
         
         # Saving domain file
-        if os.path.isfile(domain):
+        if os.path.exists(domain):
             self.domain = domain
         else:
             logger.error("The domain file was not found")
 
         # Saving intents files
-        if os.path.isfile(intents):
+        if os.path.isfile(intents) and os.path.exists(intents):
             self.intents.append(intents)
 
         elif os.path.isdir(intents):
@@ -81,12 +81,13 @@ class Validator:
             intent_files = [f for f in listdir(intents) if isfile(join(intents, f))]
             for file in intent_files:
                 self.intents.append(intents + file)
+                
         
         else: 
             logger.error("The intents file was not found")
         
         # Saving stories files
-        if os.path.isfile(stories):
+        if os.path.isfile(stories) and os.path.exists(stories):
             self.stories.append(stories)
 
         elif os.path.isdir(stories):
@@ -112,12 +113,27 @@ class Validator:
             file.close()
             try:
                 validate(yaml.load(domain_file), yaml.load(schema))
+                self.check_spaces_between_utters()
                 logger.info('Domain verified')
             except Exception as e:
                 logger.error('There is an error in ' + self.domain + ' ' + str(e))
         else:
             logger.error('The domain could not be verified')
 
+    def check_spaces_between_utters(self):
+        file = open(self.domain, 'r')
+        domain_lines = file.readlines()
+        file.close()
+        for line in domain_lines:
+            line_s = line.strip().split('_')
+            if len(line_s) >= 2 and line_s[0] == 'utter':
+                index = domain_lines.index(line) - 1
+
+                if domain_lines[index] != '\n' and domain_lines[index] != 'templates:\n':
+                    logger.warning('There should be a space between lines ' + str(index+1) + 
+                                    ' and '+ str(index+2)+ ' in the domain file')
+                
+            
 
     def search(self, vector,searched_value):
         vector.append(searched_value)
