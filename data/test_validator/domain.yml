@@ -1,0 +1,21 @@
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+
+
+actions:
+  - utter_greet
+  - utter_goodbye
+  - utter_question
+
+templates:
+  utter_greet:
+  - text: "Hello!"
+
+  utter_goodbye:
+  - text: "Ok, bye!"
+
+  utter_question:
+  - text: "Are you ok?"
