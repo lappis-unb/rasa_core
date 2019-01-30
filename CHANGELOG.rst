@@ -12,6 +12,7 @@ This project adheres to `Semantic Versioning`_ starting with version 0.2.0.
 
 Added
 -----
+- A validator class to help developing by checking if the files have any errors
 
 Changed
 -------
