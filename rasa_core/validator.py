@@ -12,49 +12,44 @@ logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 
-
-def str2bool(v):
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
-
-
 parser.add_argument(
-    '--domain', type=str, default='domain.yml',
+    '--domain', '-d',
+    type=str, default='domain.yml',
     help='Path for the domain file'
 )
 
 parser.add_argument(
-    '--stories', type=str, default='data/stories.md',
+    '--stories', '-s',
+    type=str, default='data/stories.md',
     help='Path for the stories file or directory'
 )
 
 parser.add_argument(
-    '--intents', type=str, default='data/intents.md',
+    '--intents', '-i',
+    type=str, default='data/intents.md',
     help='Path for the intents file or directory'
 )
 
 parser.add_argument(
-    '--warnings', '-w', type=str2bool, default=True,
-    help='Warings flag'
+    '--warnings', '-w',
+    action='store_true',
+    default=False,
+    help='Run script with warings'
 )
 
 parser.add_argument(
-    '--validate_intents', type=str2bool, default=True,
-    help='Run validations to intents'
+    '--no_validate_intents', action='store_true', default=False,
+    help='Skips validations to intents'
 )
 
 parser.add_argument(
-    '--validate_utters', type=str2bool, default=True,
-    help='Run validations to utters'
+    '--no_validate_utters', action='store_true', default=False,
+    help='Skips validations to utters'
 )
 
 parser.add_argument(
-    '--validate_domain', type=str2bool, default=True,
-    help='Run validations to domain'
+    '--no_validate_domain', action='store_true', default=False,
+    help='Skips validations to domain'
 )
 
 
@@ -106,7 +101,7 @@ class Validator:
         else:
             logger.error("The stories file was not found")
 
-    def verify_domain(self):
+    def verify_domain(self, warnings):
         if self.domain != '':
             schema = """
             type: object
@@ -116,7 +111,8 @@ class Validator:
             file.close()
             try:
                 validate(yaml.load(domain_file), yaml.load(schema))
-                self.check_spaces_between_utters()
+                if warnings:
+                    self._check_spaces_between_utters()
                 logger.info('Domain verified')
             except Exception as e:
                 logger.error('There is an error in ' + self.domain +
@@ -124,7 +120,7 @@ class Validator:
         else:
             logger.error('The domain could not be verified')
 
-    def check_spaces_between_utters(self):
+    def _check_spaces_between_utters(self):
         file = open(self.domain, 'r')
         domain_lines = file.readlines()
         file.close()
@@ -140,7 +136,7 @@ class Validator:
                                    str(index+1) + ' and ' + str(index+2) +
                                    ' in the domain file')
 
-    def search(self, vector, searched_value):
+    def _search(self, vector, searched_value):
         vector.append(searched_value)
         count = 0
         while(searched_value != vector[count]):
@@ -183,7 +179,7 @@ class Validator:
             # Checks if the intents in domain are the same as the ones
             # in the intent files
             for intent in intents_in_domain:
-                found = self.search(intents_in_files, intent)
+                found = self._search(intents_in_files, intent)
                 if not found:
                     logger.error('The intent ' + intent +
                                  ' is in the domain file but was' +
@@ -192,7 +188,7 @@ class Validator:
                     self.valid_intents.append(intent)
 
             for intent in intents_in_files:
-                found = self.search(intents_in_domain, intent)
+                found = self._search(intents_in_domain, intent)
                 if not found:
                     logger.error('The intent ' + intent +
                                  ' is in the intent files but was' +
@@ -220,7 +216,7 @@ class Validator:
                         if '{' in intent:
                             intent = intent[:intent.find('{')]
 
-                        found = self.search(self.valid_intents, intent)
+                        found = self._search(self.valid_intents, intent)
                         if not found:
                             logger.error('The intent ' + intent +
                                          ' is used in the stories' +
@@ -251,7 +247,7 @@ class Validator:
                         stories_intents.append(intent)
 
             for intent in self.valid_intents:
-                found = self.search(stories_intents, intent)
+                found = self._search(stories_intents, intent)
                 if not found:
                     logger.warning('The intent ' + intent +
                                    ' is not being used in any story')
@@ -294,14 +290,14 @@ class Validator:
                     break
 
             for utter in utter_actions:
-                found = self.search(utter_templates, utter)
+                found = self._search(utter_templates, utter)
                 if not found:
                     logger.error('There is no template for utter ' + utter)
                 else:
                     self.valid_utters.append(utter)
 
             for utter in utter_templates:
-                found = self.search(utter_actions, utter)
+                found = self._search(utter_actions, utter)
                 if not found:
                     logger.error('The utter ' + utter +
                                  ' is not listed in actions')
@@ -323,7 +319,7 @@ class Validator:
                     s_line = line.split()
                     if len(s_line) == 2 and s_line[0] == '-':
                         utter = s_line[1]
-                        found = self.search(self.valid_utters, utter)
+                        found = self._search(self.valid_utters, utter)
                         if not found:
                             logger.error('The utter ' + utter +
                                          ' is used in the stories' +
@@ -351,7 +347,7 @@ class Validator:
                         stories_utters.append(utter)
 
             for utter in self.valid_utters:
-                found = self.search(stories_utters, utter)
+                found = self._search(stories_utters, utter)
                 if not found:
                     logger.warning('The utter ' + utter +
                                    ' is not being used in any story')
@@ -360,7 +356,7 @@ class Validator:
             logger.error('The utters could not be verified')
 
     def run_verifications(self):
-        self.verify_domain()
+        self.verify_domain(True)
         self.verify_intents_in_stories()
         self.verify_intents_being_used()
         self.verify_utters_in_stories()
@@ -372,24 +368,24 @@ if __name__ == '__main__':
     stories = parser.parse_args().stories
     intents = parser.parse_args().intents
     warning = parser.parse_args().warnings
-    validate_intents = parser.parse_args().validate_intents
-    validate_utters = parser.parse_args().validate_utters
-    validate_domain = parser.parse_args().validate_domain
+    no_validate_intents = parser.parse_args().no_validate_intents
+    no_validate_utters = parser.parse_args().no_validate_utters
+    no_validate_domain = parser.parse_args().no_validate_domain
 
     utils.configure_colored_logging(loglevel='DEBUG')
 
     validator = Validator(domain, intents, stories)
 
-    if validate_domain:
-        validator.verify_domain()
+    if not no_validate_domain:
+        validator.verify_domain(warning)
 
-    if validate_intents:
+    if not no_validate_intents:
         validator.verify_intents()
         validator.verify_intents_in_stories()
         if warning:
             validator.verify_intents_being_used()
 
-    if validate_utters:
+    if not no_validate_utters:
         validator.verify_utters()
         validator.verify_utters_in_stories()
         if warning:
