@@ -159,39 +159,38 @@ you may do so by adding the ``e2e=true`` query parameter:
 Test files for possible mistakes
 --------------------------------
 
-To verify if there is any mistake in your domain, intents and stories files, by
-running the validator script. Here is an example:
+To verify if there is any mistake in your domain, intents and stories files, run the validator script. You can run it with the following command:
 
 .. code-block:: bash
 
   $ python -m rasa_core.validator -s data/stories.md -d domain.yml -i data/nlu.md -w
 
-The script above runs all the validations on your files, but you can specify which
-ones and if you want to run with warnings. Here is the list of options to
+The script above runs all the validations on your files. You can also specify which
+ones and whether it runs with warnings or not. Here is the list of options to
 the script:
 
 .. program-output:: python -m rasa_core.validator --help
 
 You can also run the functions on your train.py or other scripts. Here is
-a list of the functions for the Validator class:
+a list of functions for the Validator class:
 
 **verify_domain(** *boolean* warnings **):** Runs verification on domain yml structure. It has as parameter a boolean argument for warnings.
 
-**verify_intents():** Checks if the intents listed in domain file are the same of the ones in the intent files.
+**verify_intents():** Checks if intents listed in domain file are the same of the ones in the intent files.
 
-**verify_intents_in_stories():** Verification for the intents in the stories, to check if they are valid.
+**verify_intents_in_stories():** Verification for intents in the stories, to check if they are valid.
 
-**verify_intents_being_used():** Verify if all the intents are being used.
+**verify_intents_being_used():** Verify if all intents are being used.
 
-**verify_utters():** Checks if the utters listed in actions are the same of the ones in the templates.
+**verify_utters():** Checks if utters listed in actions are the same of the ones in the templates.
 
-**verify_utters_in_stories():** Verification for the utters in the stories, to check if they are valid.
+**verify_utters_in_stories():** Verification for utters in stories, to check if they are valid.
 
-**verify_utters_being_used():** Verify if all the utters are being used.
+**verify_utters_being_used():** Verify if all utters are being used.
 
-**run_verifications():** Runs all the verifications above.
+**run_verifications():** Runs all verifications above.
 
-To use these functions is necessary to create a Validator object and initialize the logger. Se the example below:
+To use these functions it is necessary to create a Validator object and initialize the logger. See the following code:
 
 .. code-block:: python
 
@@ -210,7 +209,7 @@ To use these functions is necessary to create a Validator object and initialize 
   validator.run_verifications()
 
 To use the validator methods before every train on rasa core, you only have to add the --intents flag with the path for your intents file.
-See the example:
+As you can see in the command below:
 
 .. code-block:: bash
 
