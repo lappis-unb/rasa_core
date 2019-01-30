@@ -5,6 +5,8 @@ import yaml
 from os import listdir
 from os.path import isfile, join
 import argparse
+from rasa_core import utils
+
 
 logger = logging.getLogger(__name__)
 
@@ -373,6 +375,8 @@ if __name__ == '__main__':
     validate_intents = parser.parse_args().validate_intents
     validate_utters = parser.parse_args().validate_utters
     validate_domain = parser.parse_args().validate_domain
+
+    utils.configure_colored_logging(loglevel='DEBUG')
 
     validator = Validator(domain, intents, stories)
 
