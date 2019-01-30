@@ -317,7 +317,9 @@ class Validator:
 
                 for line in stories_lines:
                     s_line = line.split()
-                    if len(s_line) == 2 and s_line[0] == '-':
+
+                    if(len(s_line) == 2 and s_line[0] == '-' and
+                       s_line[1][:5] == 'utter'):
                         utter = s_line[1]
                         found = self._search(self.valid_utters, utter)
                         if not found:
