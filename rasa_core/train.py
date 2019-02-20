@@ -8,7 +8,7 @@ from rasa_core import utils
 from rasa_core.agent import Agent
 from rasa_core.domain import TemplateDomain
 from rasa_core.interpreter import NaturalLanguageInterpreter
-from rasa_core.run import AvailableEndpoints, create_event_broker
+from rasa_core.run import AvailableEndpoints
 from rasa_core.tracker_store import TrackerStore
 from rasa_core.training import interactive
 from rasa_core.training.dsl import StoryFileReader
@@ -299,12 +299,8 @@ def do_interactive_learning(cmdline_args, stories, additional_arguments):
         logger.info("Loading a pre-trained model. This means that "
                     "all training-related parameters will be ignored.")
 
-        _broker = create_event_broker(cmdline_args.event_broker,
-                                      _endpoints.event_broker)
         _tracker_store = TrackerStore.find_tracker_store(
-            None,
-            _endpoints.tracker_store,
-            _broker)
+            None, _endpoints.tracker_store)
 
         _agent = Agent.load(cmdline_args.core,
                             interpreter=_interpreter,
