@@ -160,7 +160,7 @@ def add_general_args(parser):
     parser.add_argument(
         '--intents',
         type=str,
-        help="Adds intents files path and enables validator"
+        help="Adds nlu training data and validates stories/domain against it"
     )
 
     utils.add_logging_option_arguments(parser)
@@ -340,10 +340,7 @@ def do_interactive_learning(cmdline_args, stories, additional_arguments):
         skip_visualization=cmdline_args.skip_visualization)
 
 def validate_files(domain, stories, intents):
-    validator = Validator(domain=domain,
-                          intents=intents,
-                          stories=stories)
-
+    validator = Validator.validate_paths(domain,intents,stories)
     validator.run_verifications()
 
 if __name__ == '__main__':
