@@ -5,8 +5,8 @@ intents_file = '../data/test_validator/intents.md'
 stories_file = '../data/test_validator/stories.md'
 
 validator_test = Validator(domain=domain_file,
-                           intents=intents_file,
-                           stories=stories_file)
+                           intents=[intents_file],
+                           stories=[stories_file])
 
 
 def test_validator_creation():
