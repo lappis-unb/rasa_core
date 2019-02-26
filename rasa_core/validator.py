@@ -50,6 +50,11 @@ parser.add_argument(
     help='Skips validations to utters'
 )
 
+parser.add_argument(
+    '--skip-stories-validation', action='store_true', default=False,
+    help='Skips validations to stories'
+)
+
 
 class Validator:
 
@@ -64,8 +69,6 @@ class Validator:
         self.valid_intents = []
         self.valid_utters = []
 
-    # its probably a good idea to run all verifications here already, so it needs to refactor in other methods
-    # and dont propagate classmethods!
     @classmethod
     def validate_paths(cls,
                        domain: Text, 
@@ -375,7 +378,65 @@ class Validator:
         else:
             logger.error('The utters could not be verified')
 
+    def verify_stories_format(self):
+        if self.stories != []:
+            for story_file_name in self.stories:
+                with open(story_file_name, 'r') as f:
+                    stories = f.readlines()
+
+                stories = self._ignore_comments(stories)
+
+                for line in range(len(stories)):
+                    stories[line] = stories[line].strip()
+
+                for line in stories:
+                        if not (line.startswith('*') or line.startswith('#') or
+                                line.startswith('-') or line == '' ):
+                            logger.error("There is an error in the stories file"
+                                         " {}:".format(story_file_name))
+                            logger.error(line)
+        else:
+            logger.error('The stories could not be verified')
+    
+    def _ignore_comments(self, stories_matrix):
+        comment_start_line = []
+        comment_start_letter = []
+        comment_end_line =[]
+        comment_end_letter = []
+
+        for line in range(len(stories_matrix)):
+            for collumn in range(len(stories_matrix[line])):            
+                if stories_matrix[line][collumn:].startswith("<!--"):
+                    comment_start_line.append(line)
+                    comment_start_letter.append(collumn)
+
+                if stories_matrix[line][collumn:].startswith("-->"):
+                    comment_end_line.append(line)
+                    comment_end_letter.append(collumn + 3)
+
+        if len(comment_start_line) > len(comment_end_line):
+            logger.error("There are unclosed comments on the stories files")
+        elif len(comment_start_line) > 0:
+            for i in range(len(comment_start_line)):
+                if comment_start_line[i] != comment_end_line[i]:
+                    stories_matrix[comment_start_line[i]] = stories_matrix[comment_start_line[i]][:comment_start_letter[i]]
+                    stories_matrix[comment_end_line[i]] = stories_matrix[comment_end_line[i]][comment_end_letter[i]:]
+
+                    if (comment_end_line[i] - comment_start_line[i]) > 1:
+                        for j in range(comment_start_line[i] + 1,
+                                       comment_end_line[i]):
+                            stories_matrix.remove(stories_matrix[j])
+
+                else:
+                    new_line = ""
+                    new_line += stories_matrix[comment_start_line[i]][:comment_start_letter[i]]
+                    new_line += stories_matrix[comment_end_line[i]][comment_end_letter[i]:]
+                    stories_matrix[comment_start_line[i]] = new_line
+
+        return stories_matrix
+
     def verify_all(self):
+        self.verify_stories_format()
         self.verify_intents_in_stories()
         self.verify_intents_being_used()
         self.verify_utters_in_stories()
@@ -389,6 +450,7 @@ if __name__ == '__main__':
     warning = parser.parse_args().warnings
     skip_intents_validation = parser.parse_args().skip_intents_validation
     skip_utters_validation = parser.parse_args().skip_utters_validation
+    skip_stories_validation = parser.parse_args().skip_stories_validation
 
     utils.configure_colored_logging(loglevel='DEBUG')
 
@@ -405,3 +467,6 @@ if __name__ == '__main__':
         validator.verify_utters_in_stories()
         if warning:
             validator.verify_utters_being_used()
+
+    if not skip_stories_validation:
+        validator.verify_stories_format()
