@@ -8,6 +8,7 @@ import argparse
 from rasa_core import utils
 from rasa_core.domain import Domain
 import sys
+from typing import Text, List, BinaryIO, Any
 
 
 logger = logging.getLogger(__name__)
@@ -40,70 +41,80 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--no_validate_intents', action='store_true', default=False,
+    '--skip-intents-validation', action='store_true', default=False,
     help='Skips validations to intents'
 )
 
 parser.add_argument(
-    '--no_validate_utters', action='store_true', default=False,
+    '--skip-utters-validation', action='store_true', default=False,
     help='Skips validations to utters'
 )
 
 
 class Validator:
 
-    def __init__(self, domain="domain.yml", intents="data/nlu.md",
-                 stories="data/stories.md"):
+    def __init__(self,
+                 domain: Text,
+                 intents: List[Text],
+                 stories: List[Text]):
+
         self.domain = domain
         self.intents = intents
         self.stories = stories
         self.valid_intents = []
         self.valid_utters = []
 
+    # its probably a good idea to run all verifications here already, so it needs to refactor in other methods
+    # and dont propagate classmethods!
     @classmethod
-    def validate_paths(cls, domain_path, intents_path, stories_path, warnings=True):
-        paths = [domain_path, intents_path, stories_path]
+    def validate_paths(cls,
+                       domain: Text, 
+                       intents: Text, 
+                       stories: Text, 
+                       warnings:BinaryIO = True):
+
+        paths = [domain, intents, stories]
         all_paths_verified = True
-        domain = ""
-        stories = []
-        intents =[]
+        domain_path = ""
+        stories_paths = []
+        intents_paths =[]
 
         for path in paths:
             if os.path.isfile(path):
                 if paths.index(path) == 0:
-                    domain = path
+                    domain_path = path
                 elif paths.index(path) == 1:
-                    intents.append(path)
+                    intents_paths.append(path)
                 elif paths.index(path) == 2:
-                    stories.append(path)
+                    stories_paths.append(path)
 
             elif os.path.isdir(path) and (paths.index(path) != 0):
-                if not path.endswith('/'):
-                    path += '/'
-
                 path_files = [f for f in listdir(path)
                               if isfile(join(path, f))]
 
                 for file in path_files:
                     if paths.index(path) == 1:
-                        intents.append(path + file)
+                        intents_paths.append(join(path, file))
                     elif paths.index(path) == 2:
-                        stories.append(path + file)
+                        stories_paths.append(join(path, file))
 
             else:
                 logger.error("{} is not a valid path".format(path))
                 all_paths_verified = False
 
-        if cls.verify_domain(domain, warnings) and all_paths_verified:
-            return cls(domain=domain,
-                        stories=stories,
-                        intents=intents)
+        if all_paths_verified and cls.verify_domain(domain_path, warnings) :
+            return cls(domain=domain_path,
+                        stories=stories_paths,
+                        intents=intents_paths)
         else:
-            sys.exit("There was an error while loading files")
+            raise ValueError("There was an error while loading files")
 
 
     @classmethod
-    def verify_domain(cls, domain, warnings=True):
+    def verify_domain(cls,
+                      domain: Text,
+                      warnings:BinaryIO =True):
+
         if domain != '':
             schema = """
             type: object
@@ -126,7 +137,7 @@ class Validator:
             return 0
 
     @classmethod
-    def _check_spaces_between_utters(cls, domain):
+    def _check_spaces_between_utters(cls, domain:Text):
         if domain != '':
             with open (domain, 'r') as file:
                 domain_lines = file.readlines()
@@ -146,7 +157,9 @@ class Validator:
             logger.error('The domain could not be verified')
 
 
-    def _search(self, vector, searched_value):
+    def _search(self,
+                vector: List[Any],
+                searched_value: Any):
         vector.append(searched_value)
         count = 0
         while(searched_value != vector[count]):
@@ -362,7 +375,7 @@ class Validator:
         else:
             logger.error('The utters could not be verified')
 
-    def run_verifications(self):
+    def verify_all(self):
         self.verify_intents_in_stories()
         self.verify_intents_being_used()
         self.verify_utters_in_stories()
@@ -374,20 +387,20 @@ if __name__ == '__main__':
     stories = parser.parse_args().stories
     intents = parser.parse_args().intents
     warning = parser.parse_args().warnings
-    no_validate_intents = parser.parse_args().no_validate_intents
-    no_validate_utters = parser.parse_args().no_validate_utters
+    skip_intents_validation = parser.parse_args().skip_intents_validation
+    skip_utters_validation = parser.parse_args().skip_utters_validation
 
     utils.configure_colored_logging(loglevel='DEBUG')
 
     validator = Validator.validate_paths(domain, intents, stories, warning)
 
-    if not no_validate_intents:
+    if not skip_intents_validation:
         validator.verify_intents()
         validator.verify_intents_in_stories()
         if warning:
             validator.verify_intents_being_used()
 
-    if not no_validate_utters:
+    if not skip_utters_validation:
         validator.verify_utters()
         validator.verify_utters_in_stories()
         if warning:
