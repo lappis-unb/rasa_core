@@ -1,13 +1,11 @@
 import logging
 import os
-from jsonschema import validate
 import yaml
+import argparse
 from os import listdir
 from os.path import isfile, join
-import argparse
 from rasa_core import utils
-from rasa_core.domain import Domain
-import sys
+from jsonschema import validate
 from typing import Text, List, BinaryIO, Any
 
 
@@ -71,16 +69,16 @@ class Validator:
 
     @classmethod
     def validate_paths(cls,
-                       domain: Text, 
-                       intents: Text, 
-                       stories: Text, 
-                       warnings:BinaryIO = True):
+                       domain: Text,
+                       intents: Text,
+                       stories: Text,
+                       warnings: BinaryIO = True):
 
         paths = [domain, intents, stories]
         all_paths_verified = True
         domain_path = ""
         stories_paths = []
-        intents_paths =[]
+        intents_paths = []
 
         for path in paths:
             if os.path.isfile(path):
@@ -105,25 +103,24 @@ class Validator:
                 logger.error("{} is not a valid path".format(path))
                 all_paths_verified = False
 
-        if all_paths_verified and cls.verify_domain(domain_path, warnings) :
+        if all_paths_verified and cls.verify_domain(domain_path, warnings):
             return cls(domain=domain_path,
-                        stories=stories_paths,
-                        intents=intents_paths)
+                       stories=stories_paths,
+                       intents=intents_paths)
         else:
             raise ValueError("There was an error while loading files")
-
 
     @classmethod
     def verify_domain(cls,
                       domain: Text,
-                      warnings:BinaryIO =True):
+                      warnings: BinaryIO = True):
 
         if domain != '':
             schema = """
             type: object
             """
             with open(domain, 'r') as file:
-                domain_file = file.read()            
+                domain_file = file.read()
             try:
                 validate(yaml.load(domain_file), yaml.load(schema))
                 if warnings:
@@ -140,9 +137,9 @@ class Validator:
             return 0
 
     @classmethod
-    def _check_spaces_between_utters(cls, domain:Text):
+    def _check_spaces_between_utters(cls, domain: Text):
         if domain != '':
-            with open (domain, 'r') as file:
+            with open(domain, 'r') as file:
                 domain_lines = file.readlines()
 
             for line in domain_lines:
@@ -152,13 +149,13 @@ class Validator:
 
                     previous_line = domain_lines[index]
 
-                    if previous_line != '\n' and previous_line != 'templates:\n':
+                    if (previous_line != '\n' and
+                            previous_line != 'templates:\n'):
                         logger.warning("There should be a space between lines"
-                                        " {} and {} in the domain file"
-                                        .format((index + 1), (index + 2)))
+                                       " {} and {} in the domain file"
+                                       .format((index + 1), (index + 2)))
         else:
             logger.error('The domain could not be verified')
-
 
     def _search(self,
                 vector: List[Any],
@@ -245,8 +242,10 @@ class Validator:
                             logger.error("The intent {} is used in the "
                                          "stories story file {} (line: {}) "
                                          "but it's not a valid intent"
-                                         .format(intent, file,
-                                         (stories_lines.index(line)+1)))
+                                         .format(intent,
+                                                 file,
+                                                 (stories_lines.index(line)+1))
+                                         )
 
         else:
             logger.error('The intents could not be verified')
@@ -347,9 +346,12 @@ class Validator:
                         found = self._search(self.valid_utters, utter)
                         if not found:
                             logger.error("The utter {} is used in the stories "
-                                         "story file {} (line: {}) but it's "
-                                         "not a valid utter".format(utter,
-                                         file,(stories_lines.index(line)+1)))
+                                         "story file {} (line: {}) but "
+                                         "it's not a valid utter"
+                                         .format(utter,
+                                                 file,
+                                                 (stories_lines.index(line)+1))
+                                         )
         else:
             logger.error('The utters could not be verified')
 
