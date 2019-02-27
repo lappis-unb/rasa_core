@@ -115,6 +115,7 @@ class Validator:
                       domain: Text,
                       warnings: BinaryIO = True):
 
+        logger.info("Verifying domain")
         if domain != '':
             schema = """
             type: object
@@ -125,7 +126,6 @@ class Validator:
                 validate(yaml.load(domain_file), yaml.load(schema))
                 if warnings:
                     cls._check_spaces_between_utters(domain)
-                logger.info('Domain verified')
                 return 1
             except Exception as e:
                 logger.error("Verification of domain file from {} failed with "
@@ -381,66 +381,48 @@ class Validator:
             logger.error('The utters could not be verified')
 
     def verify_stories_format(self):
+        logger.info("Verifying stories")
         if self.stories != []:
             for story_file_name in self.stories:
-                with open(story_file_name, 'r') as f:
-                    stories = f.readlines()
-
-                stories = self._ignore_comments(stories)
+                stories = self._remove_comments(story_file_name)
 
                 for line in range(len(stories)):
                     stories[line] = stories[line].strip()
 
                 for line in stories:
-                        if not (line.startswith('*') or line.startswith('#') or
-                                line.startswith('-') or line == '' ):
-                            logger.error("There is an error in the stories file"
-                                         " {}:".format(story_file_name))
-                            logger.error(line)
+                    if not (line.startswith('*') or line.startswith('#') or
+                            line.startswith('-') or line == ''):
+                        logger.error("There is an error in the stories file"
+                                     " {}:".format(story_file_name))
+                        logger.error(line)
         else:
             logger.error('The stories could not be verified')
-    
-    def _ignore_comments(self, stories_matrix):
-        comment_start_line = []
-        comment_start_letter = []
-        comment_end_line =[]
-        comment_end_letter = []
 
-        for line in range(len(stories_matrix)):
-            for collumn in range(len(stories_matrix[line])):            
-                if stories_matrix[line][collumn:].startswith("<!--"):
-                    comment_start_line.append(line)
-                    comment_start_letter.append(collumn)
+    def _clean_string(self, st: Text, story_file: Text):
+        fragments = []
+        while st:
+            fragment, open_, st = st.partition('<!--')
+            _, close, st = st.partition('-->')
+            if open_ and not close or close and not open_:
+                logger.error("The file {} has a unclosed comment"
+                             .format(story_file))
+            fragments.append(fragment)
+        return ''.join(fragments)
 
-                if stories_matrix[line][collumn:].startswith("-->"):
-                    comment_end_line.append(line)
-                    comment_end_letter.append(collumn + 3)
-
-        if len(comment_start_line) > len(comment_end_line):
-            logger.error("There are unclosed comments on the stories files")
-        elif len(comment_start_line) > 0:
-            for i in range(len(comment_start_line)):
-                if comment_start_line[i] != comment_end_line[i]:
-                    stories_matrix[comment_start_line[i]] = stories_matrix[comment_start_line[i]][:comment_start_letter[i]]
-                    stories_matrix[comment_end_line[i]] = stories_matrix[comment_end_line[i]][comment_end_letter[i]:]
-
-                    if (comment_end_line[i] - comment_start_line[i]) > 1:
-                        for j in range(comment_start_line[i] + 1,
-                                       comment_end_line[i]):
-                            stories_matrix.remove(stories_matrix[j])
-
-                else:
-                    new_line = ""
-                    new_line += stories_matrix[comment_start_line[i]][:comment_start_letter[i]]
-                    new_line += stories_matrix[comment_end_line[i]][comment_end_letter[i]:]
-                    stories_matrix[comment_start_line[i]] = new_line
-
-        return stories_matrix
+    def _remove_comments(self, story_file: Text):
+        with open(story_file, 'r') as fd:
+            no_comment = self._clean_string(fd.read(), story_file)
+        story_matrix = no_comment.split('\n')
+        return story_matrix
 
     def verify_all(self):
         self.verify_stories_format()
+
+        logger.info("Verifying intents")
         self.verify_intents_in_stories()
         self.verify_intents_being_used()
+
+        logger.info("Verifying utters")
         self.verify_utters_in_stories()
         self.verify_utters_being_used()
 
@@ -459,12 +441,14 @@ if __name__ == '__main__':
     validator = Validator.validate_paths(domain, intents, stories, warning)
 
     if not skip_intents_validation:
+        logger.info("Verifying intents")
         validator.verify_intents()
         validator.verify_intents_in_stories()
         if warning:
             validator.verify_intents_being_used()
 
     if not skip_utters_validation:
+        logger.info("Verifying utters")
         validator.verify_utters()
         validator.verify_utters_in_stories()
         if warning:
