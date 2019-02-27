@@ -14,7 +14,7 @@ from rasa_core.tracker_store import TrackerStore
 from rasa_core.training import interactive
 from rasa_core.training.dsl import StoryFileReader
 from rasa_core.utils import set_default_subparser
-from rasa_core.validator import Validator 
+from rasa_core.validator import Validator
 
 
 logger = logging.getLogger(__name__)
@@ -160,7 +160,8 @@ def add_general_args(parser):
     parser.add_argument(
         '--intents',
         type=str,
-        help="Adds nlu training data and validates stories/domain against it"
+        help="Adds nlu training data and validates stories/domain against it",
+        default=''
     )
 
     utils.add_logging_option_arguments(parser)
@@ -339,9 +340,11 @@ def do_interactive_learning(cmdline_args, stories, additional_arguments):
         finetune=cmdline_args.finetune,
         skip_visualization=cmdline_args.skip_visualization)
 
+
 def validate_files(domain, stories, intents):
-    validator = Validator.validate_paths(domain,intents,stories)
+    validator = Validator.validate_paths(domain, intents, stories)
     validator.verify_all()
+
 
 if __name__ == '__main__':
 
@@ -355,10 +358,10 @@ if __name__ == '__main__':
 
     training_stories = cli.stories_from_cli_args(cmdline_arguments)
 
-    if cmdline_arguments.intents != None:
+    if cmdline_arguments.intents != '':
         validate_files(cmdline_arguments.domain,
-                        cmdline_arguments.stories,
-                        cmdline_arguments.intents)
+                       cmdline_arguments.stories,
+                       cmdline_arguments.intents)
 
     if cmdline_arguments.mode == 'default':
         do_default_training(cmdline_arguments,

@@ -164,7 +164,7 @@ class Validator:
         count = 0
         while(searched_value != vector[count]):
             count += 1
-        if(count == len(vector)-1):
+        if(count == len(vector) - 1):
             return False
         else:
             return True
@@ -239,13 +239,12 @@ class Validator:
 
                         found = self._search(self.valid_intents, intent)
                         if not found:
+                            line_number = stories_lines.index(line) + 1
                             logger.error("The intent {} is used in the "
                                          "stories story file {} (line: {}) "
                                          "but it's not a valid intent"
                                          .format(intent,
-                                                 file,
-                                                 (stories_lines.index(line)+1))
-                                         )
+                                                 file, line_number))
 
         else:
             logger.error('The intents could not be verified')
@@ -345,13 +344,12 @@ class Validator:
                         utter = s_line[1]
                         found = self._search(self.valid_utters, utter)
                         if not found:
+                            line_number = stories_lines.index(line) + 1
                             logger.error("The utter {} is used in the stories "
                                          "story file {} (line: {}) but "
                                          "it's not a valid utter"
                                          .format(utter,
-                                                 file,
-                                                 (stories_lines.index(line)+1))
-                                         )
+                                                 file, line_number))
         else:
             logger.error('The utters could not be verified')
 
