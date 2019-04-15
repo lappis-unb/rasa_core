@@ -342,7 +342,7 @@ def do_interactive_learning(cmdline_args, stories, additional_arguments):
 
 
 def validate_files(domain, stories, intents):
-    validator = Validator.validate_paths(domain, intents, stories)
+    validator = Validator(domain, intents, stories)
     validator.verify_all()
 
 
