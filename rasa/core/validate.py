@@ -48,7 +48,7 @@ parser.add_argument(
 )
 
 
-class Validator:
+class Validate:
 
     def __init__(self,
                  domain: Text,
@@ -192,12 +192,12 @@ if __name__ == '__main__':
 
     utils.configure_colored_logging(loglevel='DEBUG')
 
-    validator = Validator(domain, intents, stories, warning)
+    validate = Validate(domain, intents, stories, warning)
 
     if not skip_intents_validation:
         logger.info("Verifying intents")
-        validator.verify_intents_in_stories()
+        validate.verify_intents_in_stories()
 
     if not skip_utters_validation:
         logger.info("Verifying utters")
-        validator.verify_utters_in_stories()
+        validate.verify_utters_in_stories()

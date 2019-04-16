@@ -161,22 +161,22 @@ you may do so by adding the ``e2e=true`` query parameter:
 Test files for possible mistakes
 --------------------------------
 
-To verify if there is any mistake in your domain, intents and stories files, run the validator script. You can run it with the following command:
+To verify if there is any mistake in your domain, intents and stories files, run the validate script. You can run it with the following command:
 
 .. code-block:: bash
 
-  $ python -m rasa_core.validator -s data/stories.md -d domain.yml -i data/nlu.md -w
+  $ python -m rasa_core.validate -s data/stories.md -d domain.yml -i data/nlu.md -w
 
 The script above runs all the validations on your files. You can also specify which
 ones and whether it runs with warnings or not. Here is the list of options to
 the script:
 
-.. program-output:: python -m rasa_core.validator --help 
+.. program-output:: python -m rasa_core.validate --help 
 
 You can also run the functions on your train.py or other scripts. Here is
-a list of functions for the Validator class:
+a list of functions for the Validate class:
 
-**validate_paths(** *string* domain, *string* intents, *string* stories, *boolean* warnings **):** Creates a validator object with the paths for domain, intents and stories.
+**validate_paths(** *string* domain, *string* intents, *string* stories, *boolean* warnings **):** Creates a validate object with the paths for domain, intents and stories.
 
 **verify_domain(** *string* domain, *boolean* warnings **):** Runs verification on domain yml structure.
 
@@ -196,25 +196,25 @@ a list of functions for the Validator class:
 
 **verify_all():** Runs all verifications above.
 
-To use these functions it is necessary to create a Validator object and initialize the logger. See the following code:
+To use these functions it is necessary to create a Validate object and initialize the logger. See the following code:
 
 .. code-block:: python
 
   import logging
   from rasa_core import utils
-  from rasa_core.validator import Validator
+  from rasa_core.validate import Validate
 
   logger = logging.getLogger(__name__)
 
   utils.configure_colored_logging('DEBUG') 
 
-  validator = Validator.validate_paths(domain='domain.yml',
+  validate = Validate.validate_paths(domain='domain.yml',
                                        intents='data/intents',
                                        stories='data/stories')
 
-  validator.verify_all()
+  validate.verify_all()
 
-To use the validator methods before every train on rasa core, you only have to add the --intents flag with the path for your intents file.
+To use the validate methods before every train on rasa core, you only have to add the --intents flag with the path for your intents file.
 As you can see in the command below:
 
 .. code-block:: bash

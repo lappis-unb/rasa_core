@@ -32,7 +32,7 @@ Added
 - File based event store
 - ability to configure event store using the endpoints file
 - added ability to use multiple env vars per line in yaml files
-- a validator class to help developing by checking if the files have any errors
+- a validation class to help developing by checking if the files have any errors
 - added ``priority`` property of policies to influence best policy in
   the case of equal confidence
 - added rasa command line interface and API
