@@ -17,7 +17,7 @@ run:
 	make run-core
 
 run-core:
-	python -m rasa_core.run --core models/dialogue --endpoints endpoints.yml
+	python -m rasa.core.run --core models/dialogue --endpoints endpoints.yml
 
 run-actions:
 	python -m rasa_core_sdk.endpoint --actions actions

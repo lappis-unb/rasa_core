@@ -1,4 +1,4 @@
-# Rasa Core 
+# Rasa Stack 
 
 [![Join the chat on Rasa Community Forum](https://img.shields.io/badge/forum-join%20discussions-brightgreen.svg)](https://forum.rasa.com/?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![PyPI version](https://img.shields.io/pypi/v/rasa_core.svg)](https://pypi.python.org/pypi/rasa-core)
@@ -8,6 +8,8 @@
 [![Documentation Status](https://img.shields.io/badge/docs-stable-brightgreen.svg)](https://rasa.com/docs/core)
 
 <img align="right" height="244" src="https://www.rasa.com/assets/img/sara/sara-open-source-lg.png">
+
+⚠️👷‍♀️ The code is now part of https://github.com/RasaHQ/rasa_nlu. Please create any Pull Requests or Issues there. 👷‍♂️⚠️
 
 Rasa Core is a framework for building conversational software, which includes
 chatbots on:
@@ -94,7 +96,7 @@ To build & edit the docs, first install all necessary dependencies:
 
 ```
 brew install sphinx
-pip install -r dev-requirements.txt
+pip3 install -r dev-requirements.txt
 ```
 
 After the installation has finished, you can run and view the documentation
@@ -109,7 +111,7 @@ and apply your changes.
 
 ## License
 Licensed under the Apache License, Version 2.0.
-Copyright 2018 Rasa Technologies GmbH. [Copy of the license](LICENSE.txt).
+Copyright 2019 Rasa Technologies GmbH. [Copy of the license](LICENSE.txt).
 
 A list of the Licenses of the dependencies of the project can be found at
 the bottom of the
