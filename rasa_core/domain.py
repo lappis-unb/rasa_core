@@ -158,10 +158,28 @@ class Domain(object):
         return self.__class__.from_dict(combined)
 
     @classmethod
+    def _check_spaces_between_utters(cls, yaml):
+
+        domain_lines = yaml.split('\n')
+        for line in domain_lines:
+            line_s = line.strip().split('_')
+            if len(line_s) >= 2 and line_s[0] == 'utter':
+                index = domain_lines.index(line) - 1
+
+                previous_line = domain_lines[index]
+
+                if (previous_line != '\n' and
+                        previous_line != 'templates:\n'):
+                    logger.warning("There should be a space between lines"
+                                   " {} and {} in the domain file"
+                                   .format((index + 1), (index + 2)))
+
+    @classmethod
     def validate_domain_yaml(cls, yaml):
         """Validate domain yaml."""
         from pykwalify.core import Core
 
+        cls._check_spaces_between_utters(yaml)
         log = logging.getLogger('pykwalify')
         log.setLevel(logging.WARN)
 

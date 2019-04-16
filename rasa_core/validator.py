@@ -47,6 +47,7 @@ parser.add_argument(
     help='Skips validations to utters'
 )
 
+
 class Validator:
 
     def __init__(self,
@@ -60,8 +61,8 @@ class Validator:
         self.warings = warning
         self.valid_intents = []
         self.valid_utters = []
-        ## Need to add the verifications for space between utters and stories
-        ## format in the reader classes (Domain, StoryFileReader)
+        # Need to add the verifications for space between utters and stories
+        # format in the reader classes (Domain, StoryFileReader)
 
     def _search(self,
                 vector: List[Any],
@@ -79,16 +80,12 @@ class Validator:
         domain_intents = []
         files_intents = []
 
-        ## Add domain intents in a list
         for intent in self.domain.intent_properties:
             domain_intents.append(intent)
 
-        ## Add intents from the intents files to another list
         for intent in self.intents._lazy_intent_examples:
             files_intents.append(intent.data['intent'])
 
-        ## Checks if the intents in the domain are the same as
-        ## the ones in the files
         for intent in domain_intents:
             found = self._search(files_intents, intent)
             if not found:
@@ -98,8 +95,6 @@ class Validator:
             else:
                 self.valid_intents.append(intent)
 
-        ## Checks if the intents in the files are the same as
-        ## the ones in the domain
         for intent in files_intents:
             found = self._search(domain_intents, intent)
             if not found:
@@ -108,13 +103,11 @@ class Validator:
                              .format(intent))
 
     def verify_intents_in_stories(self):
-        ## Check if there is a list of valid intents
         if self.valid_intents == []:
             self.verify_intents()
-        
+
         stories_intents = []
 
-        ## Check if every intent in the storie files is a valid intent
         for story in self.stories:
             for event in story.events:
                 if type(event) == UserUttered:
@@ -128,7 +121,6 @@ class Validator:
                                      "valid intent".format(intent))
 
         if self.warings:
-            ## Check if the valid intents are being used in the stories
             for intent in self.valid_intents:
                 found = self._search(stories_intents, intent)
                 if not found:
@@ -136,38 +128,33 @@ class Validator:
                                    "story".format(intent))
 
     def verify_utters(self):
-        ## Make a list for utter actions and templates
         utter_actions = self.domain.action_names
         utter_templates = []
 
         for utter in self.domain.templates:
             utter_templates.append(utter)
 
-        ## Check if every utter template has a action
         for utter in utter_templates:
             found = self._search(utter_actions, utter)
             if not found:
                 logger.error("The utter {} is not listed in actions"
-                              .format(utter))
+                             .format(utter))
             else:
                 self.valid_utters.append(utter)
 
-        ## Check if every utter action has a template
         for utter in utter_actions:
             if utter.split('_')[0] == 'utter':
                 found = self._search(utter_templates, utter)
                 if not found:
                     logger.error("There is no template for utter {}"
-                                .format(utter))
+                                 .format(utter))
 
     def verify_utters_in_stories(self):
-        ## Check if there is a list of valid utters
         if self.valid_utters == []:
             self.verify_utters()
-        
+
         stories_utters = []
 
-        ## Check if every intent in the storie files is a valid intent
         for story in self.stories:
             for event in story.events:
                 if type(event) == ActionExecuted:
@@ -181,7 +168,6 @@ class Validator:
                                      "valid utter".format(utter))
 
         if self.warings:
-            ## Check if the valid utters are being used in the stories
             for utter in self.valid_utters:
                 found = self._search(stories_utters, utter)
                 if not found:
@@ -211,7 +197,7 @@ if __name__ == '__main__':
     if not skip_intents_validation:
         logger.info("Verifying intents")
         validator.verify_intents_in_stories()
-    
+
     if not skip_utters_validation:
         logger.info("Verifying utters")
         validator.verify_utters_in_stories()
