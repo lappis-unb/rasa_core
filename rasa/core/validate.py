@@ -1,12 +1,14 @@
 import logging
 import argparse
-from rasa_core import utils
+import asyncio
+from rasa import utils
 from typing import Text, List, BinaryIO, Any
-from rasa_core.domain import Domain
+from rasa.core.domain import Domain
 from rasa_nlu.training_data.loading import load_data
-from rasa_core.training.dsl import StoryFileReader
-from rasa_core.training.dsl import UserUttered
-from rasa_core.training.dsl import ActionExecuted
+from rasa.core.training.dsl import StoryFileReader
+from rasa.core.training.dsl import UserUttered
+from rasa.core.training.dsl import ActionExecuted
+from rasa.core.interpreter import RegexInterpreter
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +59,11 @@ class Validate:
                  warning: BinaryIO = True):
         self.domain = Domain.load(domain)
         self.intents = load_data(intents)
-        self.stories = StoryFileReader.read_from_file(stories, self.domain)
+        self.stories = None
+        self.stories_file = stories
         self.warings = warning
         self.valid_intents = []
         self.valid_utters = []
-        # Need to add the verifications for space between utters and stories
-        # format in the reader classes (Domain, StoryFileReader)
 
     def _search(self,
                 vector: List[Any],
@@ -108,6 +109,8 @@ class Validate:
 
         stories_intents = []
 
+        if self.stories == None:
+            self.stories = yield from StoryFileReader.read_from_file(self.stories_file, self.domain)
         for story in self.stories:
             for event in story.events:
                 if type(event) == UserUttered:
@@ -155,6 +158,8 @@ class Validate:
 
         stories_utters = []
 
+        if self.stories == None:
+            self.stories = yield from StoryFileReader.read_from_file(self.stories_file, self.domain)
         for story in self.stories:
             for event in story.events:
                 if type(event) == ActionExecuted:
@@ -194,10 +199,10 @@ if __name__ == '__main__':
 
     validate = Validate(domain, intents, stories, warning)
 
-    if not skip_intents_validation:
-        logger.info("Verifying intents")
-        validate.verify_intents_in_stories()
-
     if not skip_utters_validation:
         logger.info("Verifying utters")
         validate.verify_utters_in_stories()
+
+    if not skip_intents_validation:
+        logger.info("Verifying intents")
+        validate.verify_intents_in_stories()
