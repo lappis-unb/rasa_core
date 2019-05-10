@@ -8,7 +8,6 @@ from rasa_nlu.training_data.loading import load_data
 from rasa.core.training.dsl import StoryFileReader
 from rasa.core.training.dsl import UserUttered
 from rasa.core.training.dsl import ActionExecuted
-from rasa.core.interpreter import RegexInterpreter
 
 logger = logging.getLogger(__name__)
 
@@ -59,11 +58,14 @@ class Validate:
                  warning: BinaryIO = True):
         self.domain = Domain.load(domain)
         self.intents = load_data(intents)
-        self.stories = None
-        self.stories_file = stories
         self.warings = warning
         self.valid_intents = []
         self.valid_utters = []
+
+        loop = asyncio.new_event_loop()
+        self.stories = loop.run_until_complete(
+            StoryFileReader.read_from_file(stories, self.domain))
+        loop.close()
 
     def _search(self,
                 vector: List[Any],
@@ -109,8 +111,6 @@ class Validate:
 
         stories_intents = []
 
-        if self.stories == None:
-            self.stories = yield from StoryFileReader.read_from_file(self.stories_file, self.domain)
         for story in self.stories:
             for event in story.events:
                 if type(event) == UserUttered:
@@ -158,8 +158,6 @@ class Validate:
 
         stories_utters = []
 
-        if self.stories == None:
-            self.stories = yield from StoryFileReader.read_from_file(self.stories_file, self.domain)
         for story in self.stories:
             for event in story.events:
                 if type(event) == ActionExecuted:

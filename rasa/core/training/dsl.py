@@ -230,7 +230,7 @@ class StoryFileReader(object):
                                      template_variables, use_e2e)
             lines = reader.verify_stories_format(filename)
 
-            return reader.process_lines(lines)
+            return await reader.process_lines(lines)
         except ValueError as err:
             file_info = ("Invalid story file format. Failed to parse "
                          "'{}'".format(os.path.abspath(filename)))
