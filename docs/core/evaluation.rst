@@ -161,38 +161,29 @@ you may do so by adding the ``e2e=true`` query parameter:
 Test files for possible mistakes
 --------------------------------
 
-To verify if there is any mistake in your domain, intents and stories files, run the validate script. You can run it with the following command:
+To verify if there is any mistake in your domain, intents and stories files, run the validate script.
+You can run it with the following command:
 
 .. code-block:: bash
 
-  $ python -m rasa_core.validate -s data/stories.md -d domain.yml -i data/nlu.md -w
+  $ python -m rasa.core.validate -s data/stories.md -d domain.yml -i data/nlu.md -w
 
 The script above runs all the validations on your files. You can also specify which
 ones and whether it runs with warnings or not. Here is the list of options to
 the script:
 
-.. program-output:: python -m rasa_core.validate --help 
+.. program-output:: python -m rasa.core.validate --help 
 
 You can also run the functions on your train.py or other scripts. Here is
 a list of functions for the Validate class:
-
-**validate_paths(** *string* domain, *string* intents, *string* stories, *boolean* warnings **):** Creates a validate object with the paths for domain, intents and stories.
-
-**verify_domain(** *string* domain, *boolean* warnings **):** Runs verification on domain yml structure.
 
 **verify_intents():** Checks if intents listed in domain file are the same of the ones in the intent files.
 
 **verify_intents_in_stories():** Verification for intents in the stories, to check if they are valid.
 
-**verify_intents_being_used():** Verify if all intents are being used.
-
 **verify_utters():** Checks if utters listed in actions are the same of the ones in the templates.
 
 **verify_utters_in_stories():** Verification for utters in stories, to check if they are valid.
-
-**verify_utters_being_used():** Verify if all utters are being used.
-
-**verify_stories_format():** Verify if there are any errors in the stories format.
 
 **verify_all():** Runs all verifications above.
 
@@ -201,43 +192,19 @@ To use these functions it is necessary to create a Validate object and initializ
 .. code-block:: python
 
   import logging
-  from rasa_core import utils
-  from rasa_core.validate import Validate
+  from rasa import utils
+  from rasa.core.validate import Validate
 
   logger = logging.getLogger(__name__)
 
   utils.configure_colored_logging('DEBUG') 
 
-  validate = Validate.validate_paths(domain='domain.yml',
-                                       intents='data/intents',
-                                       stories='data/stories')
+  validate = Validate(domain='domain.yml',
+                      intents='data/intents',
+                      stories='data/stories',
+                      warning=True)
 
   validate.verify_all()
-
-To use the validate methods before every train on rasa core, you only have to add the --intents flag with the path for your intents file.
-As you can see in the command below:
-
-.. code-block:: bash
-
-  	$ python -m rasa_core.train -s data/stories.md -d domain.yml -o models/dialogue \
-          --intents data/nlu.md 
-
-It is also possible to use the function *validate_files()* from *rasa_core.train*. Here is an example:
-
-.. code-block:: python
-
-  import logging
-  from rasa_core import utils
-  from rasa_core.train import validate_files
-
-  logger = logging.getLogger(__name__)
-
-  utils.configure_colored_logging('DEBUG')
-
-  validate_files(domain='domain.yml',
-                 intents='data/intents',
-                 stories='data/stories')
-
 
 
 .. include:: feedback.inc

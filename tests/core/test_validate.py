@@ -1,18 +1,25 @@
-from rasa_core.validate import Validate
+import asyncio
+from rasa.core.validate import Validate
+from rasa.core.domain import Domain
+from rasa_nlu.training_data import TrainingData
+from rasa.core.training.dsl import StoryFileReader
+from rasa.core.training.dsl import StoryStep
 
 domain_file = 'data/test_validate/domain.yml'
 intents_file = 'data/test_validate/intents.md'
 stories_file = 'data/test_validate/stories.md'
 
 validate_test = Validate(domain=domain_file,
-                           intents=[intents_file],
-                           stories=[stories_file])
+                        intents=intents_file,
+                        stories=stories_file,
+                        warning=True)
 
 
 def test_validate_creation():
-    assert validate_test.domain == domain_file
-    assert validate_test.intents == [intents_file]
-    assert validate_test.stories == [stories_file]
+
+    assert isinstance(validate_test.domain, Domain)
+    assert isinstance(validate_test.intents, TrainingData)
+    assert isinstance(validate_test.stories, list)
 
 
 def test_search():

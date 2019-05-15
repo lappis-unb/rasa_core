@@ -15,19 +15,19 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
     '--domain', '-d',
-    type=str, default='domain.yml',
+    type=str, required=True,
     help='Path for the domain file'
 )
 
 parser.add_argument(
     '--stories', '-s',
-    type=str, default='data/stories.md',
+    type=str, required=True,
     help='Path for the stories file or directory'
 )
 
 parser.add_argument(
     '--intents', '-i',
-    type=str, default='data/intents.md',
+    type=str, required=True,
     help='Path for the intents file or directory'
 )
 
