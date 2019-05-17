@@ -53,18 +53,15 @@ def create_argument_parser():
 class Validate:
 
     def __init__(self,
-                 domain: Text,
-                 intents: Text,
-                 stories: Text):
-        self.domain = Domain.load(domain)
-        self.intents = load_data(intents)
+                 domain,
+                 intents,
+                 stories):
+        self.domain = domain
+        self.intents = intents
         self.valid_intents = []
         self.valid_utters = []
 
-        loop = asyncio.new_event_loop()
-        self.stories = loop.run_until_complete(
-            StoryFileReader.read_from_file(stories, self.domain))
-        loop.close()
+        self.stories = stories
 
     def _search(self,
                 vector: List[Any],
@@ -186,20 +183,18 @@ if __name__ == '__main__':
     parser = create_argument_parser()
     cmdline_args = parser.parse_args()
 
-    domain = cmdline_args.domain
-    stories = cmdline_args.stories
-    intents = cmdline_args.intents
+    domain = Domain.load(cmdline_args.domain)
+    stories = asyncio.run(StoryFileReader.read_from_folder(cmdline_args.stories, domain))
+    intents = load_data(cmdline_args.intents)
     skip_intents_validation = cmdline_args.skip_intents_validation
     skip_utters_validation = cmdline_args.skip_utters_validation
 
     utils.configure_colored_logging(cmdline_args.loglevel)
-
     validate = Validate(domain, intents, stories)
 
     if not skip_utters_validation:
         logger.info("Verifying utters")
         validate.verify_utters_in_stories()
-
     if not skip_intents_validation:
         logger.info("Verifying intents")
         validate.verify_intents_in_stories()
