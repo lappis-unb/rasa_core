@@ -11,8 +11,7 @@ stories_file = 'data/test_validate/stories.md'
 
 validate_test = Validate(domain=domain_file,
                         intents=intents_file,
-                        stories=stories_file,
-                        warning=True)
+                        stories=stories_file)
 
 
 def test_validate_creation():

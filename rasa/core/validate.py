@@ -32,13 +32,6 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--warnings', '-w',
-    action='store_true',
-    default=False,
-    help='Run script with warings'
-)
-
-parser.add_argument(
     '--skip-intents-validation', action='store_true', default=False,
     help='Skips validations to intents'
 )
@@ -54,11 +47,9 @@ class Validate:
     def __init__(self,
                  domain: Text,
                  intents: Text,
-                 stories: Text,
-                 warning: BinaryIO = True):
+                 stories: Text):
         self.domain = Domain.load(domain)
         self.intents = load_data(intents)
-        self.warings = warning
         self.valid_intents = []
         self.valid_utters = []
 
@@ -123,12 +114,11 @@ class Validate:
                                      "stories files but it's not a "
                                      "valid intent".format(intent))
 
-        if self.warings:
-            for intent in self.valid_intents:
-                found = self._search(stories_intents, intent)
-                if not found:
-                    logger.warning("The intent {} is not being used in any "
-                                   "story".format(intent))
+        for intent in self.valid_intents:
+            found = self._search(stories_intents, intent)
+            if not found:
+                logger.warning("The intent {} is not being used in any "
+                               "story".format(intent))
 
     def verify_utters(self):
         utter_actions = self.domain.action_names
@@ -170,12 +160,11 @@ class Validate:
                                      "stories files but it's not a "
                                      "valid utter".format(utter))
 
-        if self.warings:
-            for utter in self.valid_utters:
-                found = self._search(stories_utters, utter)
-                if not found:
-                    logger.warning("The utter {} is not being used in any "
-                                   "story".format(utter))
+        for utter in self.valid_utters:
+            found = self._search(stories_utters, utter)
+            if not found:
+                logger.warning("The utter {} is not being used in any "
+                               "story".format(utter))
 
     def verify_all(self):
         logger.info("Verifying intents")
@@ -189,13 +178,12 @@ if __name__ == '__main__':
     domain = parser.parse_args().domain
     stories = parser.parse_args().stories
     intents = parser.parse_args().intents
-    warning = parser.parse_args().warnings
     skip_intents_validation = parser.parse_args().skip_intents_validation
     skip_utters_validation = parser.parse_args().skip_utters_validation
 
     utils.configure_colored_logging(loglevel='DEBUG')
 
-    validate = Validate(domain, intents, stories, warning)
+    validate = Validate(domain, intents, stories)
 
     if not skip_utters_validation:
         logger.info("Verifying utters")
