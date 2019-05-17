@@ -1,9 +1,5 @@
 import asyncio
 from rasa.core.validate import Validate
-from rasa.core.domain import Domain
-from rasa_nlu.training_data import TrainingData
-from rasa.core.training.dsl import StoryFileReader
-from rasa.core.training.dsl import StoryStep
 
 domain_file = 'data/test_validate/domain.yml'
 intents_file = 'data/test_validate/intents.md'

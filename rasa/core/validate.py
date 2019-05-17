@@ -4,8 +4,8 @@ import asyncio
 from rasa import utils
 from typing import Text, List, BinaryIO, Any
 from rasa.core.domain import Domain
-from rasa_nlu.training_data.loading import load_data
-from rasa.core.training.dsl import StoryFileReader
+from rasa.nlu.training_data import load_data, TrainingData
+from rasa.core.training.dsl import StoryFileReader, StoryStep
 from rasa.core.training.dsl import UserUttered
 from rasa.core.training.dsl import ActionExecuted
 from rasa.core import cli
@@ -53,14 +53,13 @@ def create_argument_parser():
 class Validate:
 
     def __init__(self,
-                 domain,
-                 intents,
-                 stories):
+                 domain: Domain,
+                 intents: TrainingData,
+                 stories: List[StoryStep]):
         self.domain = domain
         self.intents = intents
         self.valid_intents = []
         self.valid_utters = []
-
         self.stories = stories
 
     def _search(self,
