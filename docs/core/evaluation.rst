@@ -166,10 +166,9 @@ You can run it with the following command:
 
 .. code-block:: bash
 
-  $ python -m rasa.core.validate -s data/stories.md -d domain.yml -i data/nlu.md -w
+  $ python -m rasa.core.validate -s data/stories.md -d domain.yml -i data/nlu.md
 
-The script above runs all the validations on your files. You can also specify which
-ones and whether it runs with warnings or not. Here is the list of options to
+The script above runs all the validations on your files. Here is the list of options to
 the script:
 
 .. program-output:: python -m rasa.core.validate --help 
@@ -201,8 +200,7 @@ To use these functions it is necessary to create a Validate object and initializ
 
   validate = Validate(domain='domain.yml',
                       intents='data/intents',
-                      stories='data/stories',
-                      warning=True)
+                      stories='data/stories')
 
   validate.verify_all()
 

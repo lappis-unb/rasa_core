@@ -8,38 +8,46 @@ from rasa_nlu.training_data.loading import load_data
 from rasa.core.training.dsl import StoryFileReader
 from rasa.core.training.dsl import UserUttered
 from rasa.core.training.dsl import ActionExecuted
+from rasa.core import cli
 
 logger = logging.getLogger(__name__)
 
-parser = argparse.ArgumentParser()
+def create_argument_parser():
+    """Parse all the command line arguments for the run script."""
 
-parser.add_argument(
-    '--domain', '-d',
-    type=str, required=True,
-    help='Path for the domain file'
-)
+    parser = argparse.ArgumentParser(description='Validates files')
 
-parser.add_argument(
-    '--stories', '-s',
-    type=str, required=True,
-    help='Path for the stories file or directory'
-)
+    parser.add_argument(
+        '--domain', '-d',
+        type=str, required=True,
+        help='Path for the domain file'
+    )
 
-parser.add_argument(
-    '--intents', '-i',
-    type=str, required=True,
-    help='Path for the intents file or directory'
-)
+    parser.add_argument(
+        '--stories', '-s',
+        type=str, required=True,
+        help='Path for the stories file or directory'
+    )
 
-parser.add_argument(
-    '--skip-intents-validation', action='store_true', default=False,
-    help='Skips validations to intents'
-)
+    parser.add_argument(
+        '--intents', '-i',
+        type=str, required=True,
+        help='Path for the intents file or directory'
+    )
 
-parser.add_argument(
-    '--skip-utters-validation', action='store_true', default=False,
-    help='Skips validations to utters'
-)
+    parser.add_argument(
+        '--skip-intents-validation', action='store_true', default=False,
+        help='Skips validations to intents'
+    )
+
+    parser.add_argument(
+        '--skip-utters-validation', action='store_true', default=False,
+        help='Skips validations to utters'
+    )
+
+    cli.arguments.add_logging_option_arguments(parser)
+    cli.run.add_run_arguments(parser)
+    return parser
 
 
 class Validate:
@@ -175,13 +183,16 @@ class Validate:
 
 
 if __name__ == '__main__':
-    domain = parser.parse_args().domain
-    stories = parser.parse_args().stories
-    intents = parser.parse_args().intents
-    skip_intents_validation = parser.parse_args().skip_intents_validation
-    skip_utters_validation = parser.parse_args().skip_utters_validation
+    parser = create_argument_parser()
+    cmdline_args = parser.parse_args()
 
-    utils.configure_colored_logging(loglevel='DEBUG')
+    domain = cmdline_args.domain
+    stories = cmdline_args.stories
+    intents = cmdline_args.intents
+    skip_intents_validation = cmdline_args.skip_intents_validation
+    skip_utters_validation = cmdline_args.skip_utters_validation
+
+    utils.configure_colored_logging(cmdline_args.loglevel)
 
     validate = Validate(domain, intents, stories)
 
