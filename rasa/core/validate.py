@@ -46,10 +46,10 @@ def create_argument_parser():
     )
 
     parser.add_argument(
-        "--skip-utters-validation",
+        "--skip-utterances-validation",
         action="store_true",
         default=False,
-        help="Skips validations to utters",
+        help="Skips validations to utterances",
     )
 
     cli.arguments.add_logging_option_arguments(parser)
@@ -62,7 +62,7 @@ class Validate:
         self.domain = domain
         self.intents = intents
         self.valid_intents = []
-        self.valid_utters = []
+        self.valid_utterances = []
         self.stories = stories
 
     def _search(self, vector: List[Any], searched_value: Any):
@@ -130,64 +130,65 @@ class Validate:
                     "The intent {} is not being used in any " "story".format(intent)
                 )
 
-    def verify_utters(self):
-        utter_actions = self.domain.action_names
-        utter_templates = []
+    def verify_utterances(self):
+        utterance_actions = self.domain.action_names
+        utterance_templates = []
 
-        for utter in self.domain.templates:
-            utter_templates.append(utter)
+        for utterance in self.domain.templates:
+            utterance_templates.append(utterance)
 
-        for utter in utter_templates:
-            found = self._search(utter_actions, utter)
+        for utterance in utterance_templates:
+            found = self._search(utterance_actions, utterance)
             if not found:
-                logger.error("The utter {} is not listed in actions".format(utter))
+                logger.error("The utterance {} is not listed in actions".format(utterance))
             else:
-                self.valid_utters.append(utter)
+                self.valid_utterances.append(utterance)
 
-        for utter in utter_actions:
-            if utter.split("_")[0] == "utter":
-                found = self._search(utter_templates, utter)
+        for utterance in utterance_actions:
+            if utterance.split("_")[0] == "utter":
+                found = self._search(utterance_templates, utterance)
                 if not found:
-                    logger.error("There is no template for utter {}".format(utter))
+                    logger.error("There is no template for utterance {}".format(utterance))
 
-    def verify_utters_in_stories(self):
-        if self.valid_utters == []:
-            self.verify_utters()
+    def verify_utterances_in_stories(self):
+        if self.valid_utterances == []:
+            self.verify_utterances()
 
-        stories_utters = []
+        stories_utterances = []
 
         for story in self.stories:
             for event in story.events:
                 if type(event) == ActionExecuted:
-                    utter = event.action_name
-                    stories_utters.append(utter)
-                    found = self._search(self.valid_utters, utter)
+                    utterance = event.action_name
+                    stories_utterances.append(utterance)
+                    found = self._search(self.valid_utterances, utterance)
 
                     if not found:
                         logger.error(
-                            "The utter {} is used in the "
+                            "The utterance {} is used in the "
                             "stories files but it's not a "
-                            "valid utter".format(utter)
+                            "valid utterance".format(utterance)
                         )
 
-        for utter in self.valid_utters:
-            found = self._search(stories_utters, utter)
+        for utterance in self.valid_utterances:
+            found = self._search(stories_utterances, utterance)
             if not found:
                 logger.warning(
-                    "The utter {} is not being used in any " "story".format(utter)
+                    "The utterance {} is not being used in any " "story".format(utterance)
                 )
 
     def verify_all(self):
         logger.info("Verifying intents")
         self.verify_intents_in_stories()
 
-        logger.info("Verifying utters")
-        self.verify_utters_in_stories()
+        logger.info("Verifying utterances")
+        self.verify_utterances_in_stories()
 
 
 if __name__ == "__main__":
     parser = create_argument_parser()
     cmdline_args = parser.parse_args()
+    utils.configure_colored_logging(cmdline_args.loglevel)
 
     domain = Domain.load(cmdline_args.domain)
     stories = asyncio.run(
@@ -195,14 +196,13 @@ if __name__ == "__main__":
     )
     intents = load_data(cmdline_args.intents)
     skip_intents_validation = cmdline_args.skip_intents_validation
-    skip_utters_validation = cmdline_args.skip_utters_validation
+    skip_utterances_validation = cmdline_args.skip_utterances_validation
 
-    utils.configure_colored_logging(cmdline_args.loglevel)
     validate = Validate(domain, intents, stories)
 
-    if not skip_utters_validation:
-        logger.info("Verifying utters")
-        validate.verify_utters_in_stories()
+    if not skip_utterances_validation:
+        logger.info("Verifying utterances")
+        validate.verify_utterances_in_stories()
     if not skip_intents_validation:
         logger.info("Verifying intents")
         validate.verify_intents_in_stories()
