@@ -105,5 +105,56 @@ for example ``--nlu_data mydata.json``.
    path, and can be loaded by the visualization script using the module path
    given for the action in the domain (e.g. ``actions.ActionSearchVenues``).
 
+Test files for possible mistakes
+--------------------------------
+
+To verify if there is any mistake in your domain, intents and stories files, run the validate script.
+You can run it with the following command:
+
+.. code-block:: bash
+
+  $ python -m rasa.core.validate -s data/stories.md -d domain.yml -i data/nlu.md
+
+The script above runs all the validations on your files. Here is the list of options to
+the script:
+
+.. program-output:: python -m rasa.core.validate --help 
+
+You can also run the functions on your train.py or other scripts. Here is
+a list of functions for the Validate class:
+
+**verify_intents():** Checks if intents listed in domain file are the same of the ones in the intent files.
+
+**verify_intents_in_stories():** Verification for intents in the stories, to check if they are valid.
+
+**verify_utterances():** Checks if utterances listed in actions are the same of the ones in the templates.
+
+**verify_utterances_in_stories():** Verification for utterances in stories, to check if they are valid.
+
+**verify_all():** Runs all verifications above.
+
+To use these functions it is necessary to create a Validate object and initialize the logger. See the following code:
+
+.. code-block:: python
+
+  import logging
+  from rasa import utils
+  from rasa.core.validate import Validate
+
+  logger = logging.getLogger(__name__)
+
+  utils.configure_colored_logging('DEBUG') 
+
+  domain = Domain.load('domain.yml')
+  intents = load_data('data/intents')
+  stories = asyncio.run(
+      StoryFileReader.read_from_folder('data/stories', domain)
+  )
+
+  validate = Validate(domain=domain,
+                      intents=intents,
+                      stories=stories)
+
+  validate.verify_all()
 
 .. include:: feedback.inc
