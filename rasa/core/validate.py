@@ -2,7 +2,7 @@ import logging
 import argparse
 import asyncio
 from rasa import utils
-from typing import Text, List, BinaryIO, Any
+from typing import List, Any
 from rasa.core.domain import Domain
 from rasa.nlu.training_data import load_data, TrainingData
 from rasa.core.training.dsl import StoryFileReader, StoryStep
@@ -19,7 +19,8 @@ def create_argument_parser():
     parser = argparse.ArgumentParser(description="Validates files")
 
     parser.add_argument(
-        "--domain", "-d", type=str, required=True, help="Path for the domain file"
+        "--domain", "-d", type=str, required=True,
+        help="Path for the domain file"
     )
 
     parser.add_argument(
@@ -58,7 +59,10 @@ def create_argument_parser():
 
 
 class Validate:
-    def __init__(self, domain: Domain, intents: TrainingData, stories: List[StoryStep]):
+    def __init__(self,
+                 domain: Domain,
+                 intents: TrainingData,
+                 stories: List[StoryStep]):
         self.domain = domain
         self.intents = intents
         self.valid_intents = []
@@ -127,7 +131,8 @@ class Validate:
             found = self._search(stories_intents, intent)
             if not found:
                 logger.warning(
-                    "The intent {} is not being used in any " "story".format(intent)
+                    "The intent {} is not being used in any "
+                    "story".format(intent)
                 )
 
     def verify_utterances(self):
@@ -140,7 +145,8 @@ class Validate:
         for utterance in utterance_templates:
             found = self._search(utterance_actions, utterance)
             if not found:
-                logger.error("The utterance {} is not listed in actions".format(utterance))
+                logger.error("The utterance {} is not listed in actions"
+                             .format(utterance))
             else:
                 self.valid_utterances.append(utterance)
 
@@ -148,7 +154,8 @@ class Validate:
             if utterance.split("_")[0] == "utter":
                 found = self._search(utterance_templates, utterance)
                 if not found:
-                    logger.error("There is no template for utterance {}".format(utterance))
+                    logger.error("There is no template for utterance {}"
+                                 .format(utterance))
 
     def verify_utterances_in_stories(self):
         if self.valid_utterances == []:
@@ -174,7 +181,8 @@ class Validate:
             found = self._search(stories_utterances, utterance)
             if not found:
                 logger.warning(
-                    "The utterance {} is not being used in any " "story".format(utterance)
+                    "The utterance {} is not being used in any "
+                    "story".format(utterance)
                 )
 
     def verify_all(self):
