@@ -2,7 +2,7 @@ import logging
 import argparse
 import asyncio
 from rasa import utils
-from typing import List, Any
+from typing import List, Any, Text
 from rasa.core.domain import Domain
 from rasa.nlu.training_data import load_data, TrainingData
 from rasa.core.training.dsl import StoryFileReader, StoryStep
@@ -58,7 +58,7 @@ def create_argument_parser():
     return parser
 
 
-class Validate:
+class Validator:
     def __init__(self,
                  domain: Domain,
                  intents: TrainingData,
@@ -86,7 +86,7 @@ class Validate:
         for intent in self.domain.intent_properties:
             domain_intents.append(intent)
 
-        for intent in self.intents._lazy_intent_examples:
+        for intent in self.intents.intent_examples:
             files_intents.append(intent.data["intent"])
 
         for intent in domain_intents:
@@ -192,21 +192,30 @@ class Validate:
         logger.info("Verifying utterances")
         self.verify_utterances_in_stories()
 
+    @classmethod
+    def from_files(cls,
+                   domain_file: Text,
+                   nlu_data: Text,
+                   story_data: Text) -> 'Validator':
+        """Create an instance from the domain, nlu and story files."""
+
+        domain = Domain.load(domain_file)
+        stories = asyncio.run(
+            StoryFileReader.read_from_folder(story_data, domain)
+        )
+        intents = load_data(nlu_data)
+        return cls(domain, intents, stories)
+
 
 if __name__ == "__main__":
     parser = create_argument_parser()
     cmdline_args = parser.parse_args()
     utils.configure_colored_logging(cmdline_args.loglevel)
 
-    domain = Domain.load(cmdline_args.domain)
-    stories = asyncio.run(
-        StoryFileReader.read_from_folder(cmdline_args.stories, domain)
-    )
-    intents = load_data(cmdline_args.intents)
+    validate = Validator.from_files(cmdline_args.domain, cmdline_args.intents, cmdline_args.stories)
+
     skip_intents_validation = cmdline_args.skip_intents_validation
     skip_utterances_validation = cmdline_args.skip_utterances_validation
-
-    validate = Validate(domain, intents, stories)
 
     if not skip_utterances_validation:
         logger.info("Verifying utterances")
