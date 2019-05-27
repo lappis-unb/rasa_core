@@ -93,7 +93,7 @@ class Validator:
             found = self._search(files_intents, intent)
             if not found:
                 logger.error(
-                    "The intent {} is in the domain file but "
+                    "The intent '{}' is in the domain file but "
                     "was not found in the intent files".format(intent)
                 )
             else:
@@ -103,7 +103,7 @@ class Validator:
             found = self._search(domain_intents, intent)
             if not found:
                 logger.error(
-                    "The intent {} is in the intents files but "
+                    "The intent '{}' is in the nlu files but "
                     "was not found in the domain".format(intent)
                 )
 
@@ -122,8 +122,8 @@ class Validator:
 
                     if not found:
                         logger.error(
-                            "The intent {} is used in the "
-                            "stories files but it's not a "
+                            "The intent '{}' is used in the "
+                            "story files, but it's not a "
                             "valid intent".format(intent)
                         )
 
@@ -131,7 +131,7 @@ class Validator:
             found = self._search(stories_intents, intent)
             if not found:
                 logger.warning(
-                    "The intent {} is not being used in any "
+                    "The intent '{}' is not being used in any "
                     "story".format(intent)
                 )
 
@@ -145,7 +145,7 @@ class Validator:
         for utterance in utterance_templates:
             found = self._search(utterance_actions, utterance)
             if not found:
-                logger.error("The utterance {} is not listed in actions"
+                logger.error("The utterance '{}' is not listed in actions"
                              .format(utterance))
             else:
                 self.valid_utterances.append(utterance)
@@ -154,7 +154,7 @@ class Validator:
             if utterance.split("_")[0] == "utter":
                 found = self._search(utterance_templates, utterance)
                 if not found:
-                    logger.error("There is no template for utterance {}"
+                    logger.error("There is no template for utterance '{}'"
                                  .format(utterance))
 
     def verify_utterances_in_stories(self):
@@ -172,8 +172,8 @@ class Validator:
 
                     if not found:
                         logger.error(
-                            "The utterance {} is used in the "
-                            "stories files but it's not a "
+                            "The utterance '{}' is used in the "
+                            "story files, but it's not a "
                             "valid utterance".format(utterance)
                         )
 
@@ -181,15 +181,15 @@ class Validator:
             found = self._search(stories_utterances, utterance)
             if not found:
                 logger.warning(
-                    "The utterance {} is not being used in any "
+                    "The utterance '{}' is not being used in any "
                     "story".format(utterance)
                 )
 
     def verify_all(self):
-        logger.info("Verifying intents")
+        logger.info("Verifying intents...")
         self.verify_intents_in_stories()
 
-        logger.info("Verifying utterances")
+        logger.info("Verifying utterances...")
         self.verify_utterances_in_stories()
 
     @classmethod
@@ -212,14 +212,9 @@ if __name__ == "__main__":
     cmdline_args = parser.parse_args()
     utils.configure_colored_logging(cmdline_args.loglevel)
 
-    validate = Validator.from_files(cmdline_args.domain, cmdline_args.intents, cmdline_args.stories)
+    validator = Validator.from_files(cmdline_args.domain, cmdline_args.intents, cmdline_args.stories)
 
     skip_intents_validation = cmdline_args.skip_intents_validation
     skip_utterances_validation = cmdline_args.skip_utterances_validation
 
-    if not skip_utterances_validation:
-        logger.info("Verifying utterances")
-        validate.verify_utterances_in_stories()
-    if not skip_intents_validation:
-        logger.info("Verifying intents")
-        validate.verify_intents_in_stories()
+    validator.verify_all()
